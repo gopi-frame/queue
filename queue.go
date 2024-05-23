@@ -1,4 +1,4 @@
-package dispatcher
+package queue
 
 import (
 	"time"
@@ -18,8 +18,8 @@ const (
 )
 
 // Default default dispatcher
-func Default(queue queue.Queue) *Dispatcher {
-	return &Dispatcher{
+func Default(queue queue.Queue) *Queue {
+	return &Queue{
 		Queue:                queue,
 		workers:              maps.NewMap[uuid.UUID, *Worker](),
 		workerNum:            DefaultMaxWorkerNum,
@@ -30,7 +30,7 @@ func Default(queue queue.Queue) *Dispatcher {
 }
 
 // New new dispatcher
-func New(queue queue.Queue, options ...Option) *Dispatcher {
+func New(queue queue.Queue, options ...Option) *Queue {
 	dispatcher := Default(queue)
 	for _, option := range options {
 		option(dispatcher)
@@ -38,9 +38,9 @@ func New(queue queue.Queue, options ...Option) *Dispatcher {
 	return dispatcher
 }
 
-// Dispatcher is a struct to manage workers
+// Queue is a struct to manage workers
 // it accepts Job and push the job to workers
-type Dispatcher struct {
+type Queue struct {
 	queue.Queue
 	status               Status
 	workers              *maps.Map[uuid.UUID, *Worker]
@@ -54,35 +54,35 @@ type Dispatcher struct {
 // Name returns the name of the WorkerPool if it's added into WorkerPoolManager
 //
 // It will return empty string if this WorkerPool instance is not added into WorkerPoolManager
-func (wp *Dispatcher) Name() string {
+func (wp *Queue) Name() string {
 	return wp.Queue.Name()
 }
 
 // Status returns the active status of the WorkerPool
-func (wp *Dispatcher) Status() Status {
+func (wp *Queue) Status() Status {
 	return wp.status
 }
 
 // Running returns whether the WorkerPool is running
-func (wp *Dispatcher) Running() bool {
+func (wp *Queue) Running() bool {
 	return wp.status == Running
 }
 
 // Stopped returns whether the WorkerPool is stopped
-func (wp *Dispatcher) Stopped() bool {
+func (wp *Queue) Stopped() bool {
 	return wp.status == Stopped
 }
 
-func (wp *Dispatcher) setStopped() {
+func (wp *Queue) setStopped() {
 	wp.status = Stopped
 }
 
-func (wp *Dispatcher) setStarted() {
+func (wp *Queue) setStarted() {
 	wp.status = Running
 }
 
 // Dispatch dispatches job
-func (wp *Dispatcher) Dispatch(job queue.Job) bool {
+func (wp *Queue) Dispatch(job queue.Job) bool {
 	if wp.Stopped() {
 		return false
 	}
@@ -92,13 +92,13 @@ func (wp *Dispatcher) Dispatch(job queue.Job) bool {
 }
 
 // Start starts the workerpool
-func (wp *Dispatcher) Start() {
+func (wp *Queue) Start() {
 	wp.setStarted()
 	wp.createWorkers()
 }
 
 // Stop stops the worker pool and all the workers
-func (wp *Dispatcher) Stop() {
+func (wp *Queue) Stop() {
 	wp.workers.Lock()
 	defer wp.workers.Unlock()
 	wp.workers.Each(func(_ uuid.UUID, worker *Worker) bool {
@@ -109,7 +109,7 @@ func (wp *Dispatcher) Stop() {
 }
 
 // Release releases and removes the workerpool from the [Manager]
-func (wp *Dispatcher) Release() {
+func (wp *Queue) Release() {
 	// if the worker pool is running, stop it first
 	if wp.Running() {
 		wp.setStopped()
@@ -122,7 +122,7 @@ func (wp *Dispatcher) Release() {
 	wp.workers.Clear()
 }
 
-func (wp *Dispatcher) createWorkers() {
+func (wp *Queue) createWorkers() {
 	wp.workers.Lock()
 	defer wp.workers.Unlock()
 	if wp.workers.Count() >= int64(wp.workerNum) {
@@ -159,7 +159,7 @@ func (wp *Dispatcher) createWorkers() {
 }
 
 // Workers returns a slice of Workers
-func (wp *Dispatcher) Workers() (workers []*Worker) {
+func (wp *Queue) Workers() (workers []*Worker) {
 	wp.workers.Lock()
 	defer wp.workers.Unlock()
 	workers = wp.workers.Values()

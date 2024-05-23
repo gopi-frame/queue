@@ -1,4 +1,4 @@
-package dispatcher
+package queue
 
 import (
 	"time"
@@ -19,7 +19,7 @@ const (
 	WorkerStatusStopped
 )
 
-func newWorker(queue *Dispatcher) *Worker {
+func newWorker(queue *Queue) *Worker {
 	worker := Worker{
 		id:          uuid.New(),
 		status:      WorkerStatusIdle,
@@ -39,7 +39,7 @@ type Worker struct {
 	startedAt   time.Time    // last started time
 	idledAt     time.Time    // last idled time
 	stoppedAt   time.Time    // last stopped time
-	queue       *Dispatcher
+	queue       *Queue
 	stopChannel chan struct{}
 }
 

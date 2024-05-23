@@ -4,71 +4,70 @@ import (
 	"errors"
 
 	"github.com/gopi-frame/contract/queue"
-	"github.com/gopi-frame/queue/dispatcher"
 	"github.com/gopi-frame/support/maps"
 )
 
 // NewManager creates a new workerpool manager
 func NewManager() *Manager {
 	manager := new(Manager)
-	manager.pools = maps.NewMap[string, *dispatcher.Dispatcher]()
+	manager.queues = maps.NewMap[string, *Queue]()
 	return manager
 }
 
 // Manager workerpool manager
 type Manager struct {
-	pools *maps.Map[string, *dispatcher.Dispatcher]
+	queues *maps.Map[string, *Queue]
 }
 
 // List lists all registered worker pools
-func (wpm *Manager) List() (items map[string]*dispatcher.Dispatcher) {
-	wpm.pools.Lock()
-	defer wpm.pools.Unlock()
-	items = wpm.pools.ToMap()
+func (wpm *Manager) List() (items map[string]*Queue) {
+	wpm.queues.Lock()
+	defer wpm.queues.Unlock()
+	items = wpm.queues.ToMap()
 	return
 }
 
 // Get returns Worker pool by the specific name
-func (wpm *Manager) Get(name string) (dispatcher *dispatcher.Dispatcher) {
-	wpm.pools.Lock()
-	defer wpm.pools.Unlock()
-	dispatcher = wpm.pools.GetOr(name, nil)
+func (wpm *Manager) Get(name string) (dispatcher *Queue) {
+	wpm.queues.Lock()
+	defer wpm.queues.Unlock()
+	dispatcher = wpm.queues.GetOr(name, nil)
 	return
 }
 
 // Create creates a new worker pool with max worker count and registers it with the specific name
-func (wpm *Manager) Create(queue queue.Queue, options ...dispatcher.Option) (d *dispatcher.Dispatcher, isNew bool) {
-	wpm.pools.Lock()
-	defer wpm.pools.Unlock()
-	if wpm.pools.ContainsKey(queue.Name()) {
-		d, isNew = wpm.pools.Get(queue.Name())
+func (wpm *Manager) Create(queue queue.Queue, options ...Option) (d *Queue, isNew bool) {
+	wpm.queues.Lock()
+	defer wpm.queues.Unlock()
+	if wpm.queues.ContainsKey(queue.Name()) {
+		d, isNew = wpm.queues.Get(queue.Name())
 		return
 	}
-	d = dispatcher.New(queue, options...)
-	wpm.pools.Set(queue.Name(), d)
+	d = New(queue, options...)
+	wpm.queues.Set(queue.Name(), d)
 	isNew = true
 	return
 }
 
 // Add registers an existing worker pool
-func (wpm *Manager) Add(d *dispatcher.Dispatcher) (success bool, err error) {
-	wpm.pools.Lock()
-	defer wpm.pools.Unlock()
-	if wpm.pools.ContainsKey(d.Name()) {
+func (wpm *Manager) Add(d *Queue) (success bool, err error) {
+	wpm.queues.Lock()
+	defer wpm.queues.Unlock()
+	if wpm.queues.ContainsKey(d.Name()) {
 		success = false
 		err = errors.New("exists")
 		return
 	}
-	wpm.pools.Set(d.Name(), d)
+	wpm.queues.Set(d.Name(), d)
 	success = true
 	return
 }
 
 // Start starts the specific worker pool
 func (wpm *Manager) Start(name string) {
-	wpm.pools.Lock()
-	defer wpm.pools.Unlock()
-	if workerPool, ok := wpm.pools.Get(name); ok {
+	wpm.queues.Lock()
+	defer wpm.queues.Unlock()
+	if workerPool, ok := wpm.queues.Get(name); ok {
 		if workerPool.Stopped() {
 			workerPool.Start()
 		}
@@ -77,9 +76,9 @@ func (wpm *Manager) Start(name string) {
 
 // Stop stops the specific worker pool
 func (wpm *Manager) Stop(name string) {
-	wpm.pools.Lock()
-	defer wpm.pools.Unlock()
-	if workerPool, ok := wpm.pools.Get(name); ok {
+	wpm.queues.Lock()
+	defer wpm.queues.Unlock()
+	if workerPool, ok := wpm.queues.Get(name); ok {
 		if workerPool.Running() {
 			workerPool.Stop()
 		}
@@ -88,21 +87,21 @@ func (wpm *Manager) Stop(name string) {
 
 // Release releases the specific worker pool
 func (wpm *Manager) Release(name string) {
-	wpm.pools.Lock()
-	defer wpm.pools.Unlock()
-	if workerPool, ok := wpm.pools.Get(name); ok {
+	wpm.queues.Lock()
+	defer wpm.queues.Unlock()
+	if workerPool, ok := wpm.queues.Get(name); ok {
 		if workerPool.Running() {
 			workerPool.Release()
 		}
-		wpm.pools.Remove(name)
+		wpm.queues.Remove(name)
 	}
 }
 
 // StartAll starts all worker pools
 func (wpm *Manager) StartAll() {
-	wpm.pools.Lock()
-	defer wpm.pools.Unlock()
-	wpm.pools.Each(func(key string, value *dispatcher.Dispatcher) bool {
+	wpm.queues.Lock()
+	defer wpm.queues.Unlock()
+	wpm.queues.Each(func(key string, value *Queue) bool {
 		if value.Stopped() {
 			go value.Start()
 		}
@@ -112,9 +111,9 @@ func (wpm *Manager) StartAll() {
 
 // StopAll stops all worker pools
 func (wpm *Manager) StopAll() {
-	wpm.pools.Lock()
-	defer wpm.pools.Unlock()
-	wpm.pools.Each(func(key string, value *dispatcher.Dispatcher) bool {
+	wpm.queues.Lock()
+	defer wpm.queues.Unlock()
+	wpm.queues.Each(func(key string, value *Queue) bool {
 		if value.Running() {
 			go value.Stop()
 		}
@@ -124,11 +123,11 @@ func (wpm *Manager) StopAll() {
 
 // ReleaseAll releases all worker pools
 func (wpm *Manager) ReleaseAll() {
-	wpm.pools.Lock()
-	defer wpm.pools.Unlock()
-	wpm.pools.Each(func(key string, value *dispatcher.Dispatcher) bool {
+	wpm.queues.Lock()
+	defer wpm.queues.Unlock()
+	wpm.queues.Each(func(key string, value *Queue) bool {
 		go value.Release()
 		return true
 	})
-	wpm.pools.Clear()
+	wpm.queues.Clear()
 }

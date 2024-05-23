@@ -1,4 +1,4 @@
-package dispatcher
+package queue
 
 import (
 	"time"
@@ -15,13 +15,13 @@ const (
 )
 
 // Option worker pool option fn
-type Option func(*Dispatcher)
+type Option func(*Queue)
 
-var noneOption = func(*Dispatcher) {}
+var noneOption = func(*Queue) {}
 
 // WorkerNum sets count of workers, default is 10
 func WorkerNum(count int) Option {
-	return func(wp *Dispatcher) {
+	return func(wp *Queue) {
 		if count <= 0 {
 			count = DefaultMaxWorkerNum
 		}
@@ -31,7 +31,7 @@ func WorkerNum(count int) Option {
 
 // WorkerBatch sets count of worker creation batches, default is 1
 func WorkerBatch(batch int) Option {
-	return func(wp *Dispatcher) {
+	return func(wp *Queue) {
 		if batch <= 0 {
 			batch = DefaultWorkerCreationBatch
 		}
@@ -41,7 +41,7 @@ func WorkerBatch(batch int) Option {
 
 // WorkerMaxIdleTime sets max idle time of a worker, default is 5min
 func WorkerMaxIdleTime(d time.Duration) Option {
-	return func(wp *Dispatcher) {
+	return func(wp *Queue) {
 		if d < 0 {
 			d = DefaultWorkerMaxIdleTime
 		}
@@ -51,7 +51,7 @@ func WorkerMaxIdleTime(d time.Duration) Option {
 
 // WorkerMaxStoppedTime sets max stopped time of a worker, default is 10min
 func WorkerMaxStoppedTime(d time.Duration) Option {
-	return func(wp *Dispatcher) {
+	return func(wp *Queue) {
 		if d < 0 {
 			d = DefaultWorkerMaxStoppedTime
 		}
@@ -64,7 +64,7 @@ func Subscriber(subscriber queue.Subcriber) Option {
 	if subscriber == nil {
 		return noneOption
 	}
-	return func(wp *Dispatcher) {
+	return func(wp *Queue) {
 		wp.Subscribe(subscriber)
 	}
 }
