@@ -5,70 +5,47 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gopi-frame/contract/queue"
-	"github.com/gopi-frame/dao"
-	"gorm.io/gen/field"
+	"github.com/gopi-frame/exception"
 )
 
-// Job job model
-type Job struct {
-	dao.DAO[Job] `gorm:"-"`
-
-	JobID       uint64     `gorm:"column:id;autoIncrement;primaryKey;not null"`
-	JobUUID     uuid.UUID  `gorm:"column:uuid;uniqueIndex;not null"`
-	Queue       string     `gorm:"column:queue;not null"`
-	JobPayload  queue.Job  `gorm:"column:payload;serializer:json;not null"`
-	JobAttempts uint8      `gorm:"column:attempts;default:0"`
-	ReservedAt  *time.Time `gorm:"column:reserved_at"`
-	AvaliableAt *time.Time `gorm:"column:avaliable_at;not null"`
-	CreatedAt   *time.Time `gorm:"column:created_at;not null;autoCreateTime"`
-}
-
-// JobDAO job dao
-type JobDAO struct {
-	dao.DAO[Job]
-
-	ID          field.Uint64
-	UUID        field.String
-	Queue       field.String
-	Payload     field.String
-	Attempts    field.Uint8
-	ReservedAt  field.Time
-	AvaliableAt field.Time
-	CreatedAt   field.Time
-}
-
-// ID id
-func (j *Job) ID() uint64 {
-	return j.JobID
-}
-
-// UUID uuid
-func (j *Job) UUID() uuid.UUID {
-	return j.JobUUID
-}
-
-// Attempts attempts
-func (j *Job) Attempts() uint {
-	return uint(j.JobAttempts)
-}
-
-// Payload payload
-func (j *Job) Payload() queue.Job {
-	return j.JobPayload
-}
-
-// Fields fields
-func (j Job) Fields(table string) JobDAO {
-	return JobDAO{
-		DAO: *(dao.DAO[Job]{}).UseTable(table),
-
-		ID:          field.NewUint64(table, "id"),
-		UUID:        field.NewString(table, "uuid"),
-		Queue:       field.NewString(table, "queue"),
-		Payload:     field.NewString(table, "payload"),
-		Attempts:    field.NewUint8(table, "attempts"),
-		ReservedAt:  field.NewTime(table, "reserved_at"),
-		AvaliableAt: field.NewTime(table, "avaliable_at"),
-		CreatedAt:   field.NewTime(table, "created_at"),
+func NewDatabaseJob(job queue.Job, queue string) *DatabaseJob {
+	queueable := &DatabaseJob{
+		UUID:        uuid.New(),
+		Queue:       queue,
+		Payload:     job,
+		AvaliableAt: job.AvalidableAt(),
 	}
+	job.SetQueueable(queueable)
+	return queueable
+}
+
+type DatabaseJob struct {
+	ID          uint64    `gorm:"column:id;autoIncrement;primaryKey;not null"`
+	UUID        uuid.UUID `gorm:"column:uuid;uniqueKey"`
+	Queue       string    `gorm:"column:queue;index"`
+	Payload     queue.Job `gorm:"column:payload;serializer:json;not null"`
+	Attempts    uint      `gorm:"column:attempts;not null"`
+	AvaliableAt time.Time `gorm:"column:avaliable_at;not null"`
+	ReservedAt  time.Time `gorm:"column:reserved_at"`
+	CreatedAt   time.Time `gorm:"column:created_at;autoCreateTime"`
+}
+
+func (job *DatabaseJob) GetID() uint64         { return job.ID }
+func (job *DatabaseJob) GetUUID() uuid.UUID    { return job.UUID }
+func (job *DatabaseJob) GetQueue() string      { return job.Queue }
+func (job *DatabaseJob) GetPayload() queue.Job { return job.Payload }
+func (job *DatabaseJob) GetAttempts() uint     { return job.Attempts }
+
+func (job *DatabaseJob) Fire() {
+	exception.Try(func() {
+		if err := job.GetPayload().Handle(); err != nil {
+			panic(err)
+		}
+	}).CatchAll(func(err error) {
+		job.Fail(err)
+	})
+}
+
+func (job *DatabaseJob) Fail(err error) {
+	job.GetPayload().Failed(err)
 }

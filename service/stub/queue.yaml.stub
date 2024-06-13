@@ -1,0 +1,20 @@
+default: "database"
+
+queues:
+  database:
+    driver: "database"
+    connection: "mysql"
+    table: "jobs"
+    numprocs : 10
+  redis:
+    driver: "redis"
+    connection: "redis"
+    numprocs : 10
+
+failed:
+  driver: "database"
+  connection: "mysql"
+  table: "failed_jobs"
+   
+  
+  
