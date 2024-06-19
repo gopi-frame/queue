@@ -4,10 +4,9 @@ go 1.22.2
 
 require (
 	github.com/google/uuid v1.6.0
-	github.com/gopi-frame/contract v0.0.0-20240524011828-1dea38ea5c95
-	github.com/gopi-frame/event v0.0.0-20240517040029-122bf1f77278
+	github.com/gopi-frame/contract v0.0.0-20240619082646-67e29840c2e8
 	github.com/gopi-frame/future v0.0.0-20240517035507-5af5a2f786bd
-	github.com/gopi-frame/support v0.0.0-20240517053805-13225ed75176
+	github.com/gopi-frame/support v0.0.0-20240530035923-f59b33f77298
 )
 
-require github.com/gopi-frame/exception v0.0.0-20240517030638-8d9d2c8deff7
+require github.com/gopi-frame/exception v0.0.0-20240517053912-ba20d5865bca
