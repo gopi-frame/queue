@@ -1,70 +1,44 @@
 package queue
 
 import (
-	"time"
-
 	"github.com/gopi-frame/contract/queue"
-	"github.com/gopi-frame/future"
 )
 
-const DefaultNumProcs = 3
+const DefaultWorkers = 3
 
-func NewDispatcher(queue queue.Queue, numprocs uint) queue.Dispatcher {
+func NewDispatcher(queue queue.Queue, nworkers int) *Dispatcher {
+	if nworkers <= 0 {
+		nworkers = DefaultWorkers
+	}
 	q := &Dispatcher{
 		queue:    queue,
-		numprocs: numprocs,
+		nworkers: nworkers,
 	}
 	return q
 }
 
 type Dispatcher struct {
-	name     string
 	queue    queue.Queue
-	numprocs uint
-	failed   queue.FailedJobProvider
+	nworkers int
+	workers  []*Worker
+	booted   bool
 }
 
-func (w *Dispatcher) FailedJobProvider(provider queue.FailedJobProvider) {
-	w.failed = provider
+func (d *Dispatcher) Dispatch(job queue.JobInterface) {
+	d.queue.Enqueue(job)
 }
 
-func (w *Dispatcher) Dispatch(job queue.Job) error {
-	return w.queue.Enqueue(job)
-}
-
-func (w *Dispatcher) Reload() {
-	if w.failed == nil {
-		return
-	}
-	failedJobs := w.failed.All(w.name)
-	for _, failedJob := range failedJobs {
-		w.Dispatch(failedJob.GetPayload())
+func (d *Dispatcher) Start() {
+	for i := 0; i < d.nworkers; i++ {
+		worker := NewWorker(d.queue)
+		d.workers = append(d.workers, worker)
+		worker.Start()
 	}
 }
 
-func (w *Dispatcher) Flush() {
-	if w.failed == nil {
-		return
+func (d *Dispatcher) Stop() {
+	for _, worker := range d.workers {
+		worker.Stop()
 	}
-	w.failed.Flush(w.name)
-}
-
-func (w *Dispatcher) Exec() {
-	for i := 0; i < int(w.numprocs); i++ {
-		go func() {
-			for {
-				job, err := w.queue.Dequeue()
-				if !ok {
-					time.Sleep(time.Second * 5)
-					continue
-				}
-				future.Void(func() {
-					if err := job.Handle(); err != nil {
-						panic(err)
-					}
-				}).CatchAll(job.Failed).Await()
-				time.Sleep(time.Second)
-			}
-		}()
-	}
+	d.booted = false
 }
