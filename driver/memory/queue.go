@@ -10,10 +10,18 @@ import (
 	squeue "github.com/gopi-frame/support/queue"
 )
 
+func NewQueue(name string) *Queue {
+	return &Queue{
+		name: name,
+		size: new(atomic.Int64),
+		jobs: squeue.NewQueue[*Job](),
+	}
+}
+
 type Queue struct {
 	name string
-	size atomic.Int64
-	jobs *squeue.Queue[*MemoryJob]
+	size *atomic.Int64
+	jobs *squeue.Queue[*Job]
 }
 
 func (q *Queue) Empty() bool {
@@ -27,7 +35,9 @@ func (q *Queue) Count() int64 {
 func (q *Queue) Enqueue(job queue.JobInterface) {
 	q.jobs.Lock()
 	defer q.jobs.RUnlock()
-	q.jobs.Enqueue(NewMemoryJob(job, q.name))
+	if q.jobs.Enqueue(NewJob(job, q.name)) {
+		q.size.Add(1)
+	}
 }
 
 func (q *Queue) Dequeue() queue.JobInterface {
@@ -35,6 +45,7 @@ func (q *Queue) Dequeue() queue.JobInterface {
 	defer q.jobs.RUnlock()
 	job, ok := q.jobs.Dequeue()
 	if ok {
+		q.size.Add(-1)
 		return job.Payload
 	}
 	return nil
@@ -46,8 +57,12 @@ func (q *Queue) Remove(job queue.JobInterface) {
 	}
 	q.jobs.Lock()
 	defer q.jobs.Unlock()
-	q.jobs.RemoveWhere(func(value *MemoryJob) bool {
-		return value.ID.String() == job.GetModel().GetID()
+	q.jobs.RemoveWhere(func(value *Job) bool {
+		if value.ID.String() == job.GetModel().GetID() {
+			q.size.Add(-1)
+			return true
+		}
+		return false
 	})
 }
 
@@ -57,7 +72,7 @@ func (q *Queue) Release(job queue.JobInterface, delay time.Duration) {
 	if model := job.GetModel(); model == nil {
 		return
 	}
-	model := new(MemoryJob)
+	model := new(Job)
 	model.ID = uuid.New()
 	model.Queue = q.name
 	model.Payload = job
@@ -66,7 +81,9 @@ func (q *Queue) Release(job queue.JobInterface, delay time.Duration) {
 	future.Delay(func() any {
 		q.jobs.Lock()
 		defer q.jobs.Unlock()
-		q.jobs.Enqueue(model)
+		if q.jobs.Enqueue(model) {
+			q.size.Add(1)
+		}
 		return nil
 	}, delay)
 }

@@ -11,13 +11,11 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-var driverName = "database"
-
-func NewQueue(db *gorm.DB, name string) *Queue {
+func NewQueue(cfg *Config) *Queue {
 	return &Queue{
-		db:    db,
-		name:  name,
-		table: DefaultJobTable,
+		db:    cfg.db,
+		name:  cfg.name,
+		table: cfg.table,
 	}
 }
 
@@ -30,7 +28,7 @@ type Queue struct {
 }
 
 func (q *Queue) Empty() bool {
-	model := new(DatabaseJob)
+	model := new(Job)
 	result := q.db.Where(clause.Eq{
 		Column: clause.Column{Name: ColumnQueue},
 		Value:  q.name,
@@ -61,7 +59,7 @@ func (q *Queue) Count() int64 {
 }
 
 func (q *Queue) Enqueue(job queue.JobInterface) {
-	model := NewDatabaseJob(q.name, job)
+	model := NewJob(q.name, job)
 	result := q.db.Table(q.table).Create(model)
 	if err := result.Error; err != nil {
 		panic(err)
@@ -71,7 +69,7 @@ func (q *Queue) Enqueue(job queue.JobInterface) {
 func (q *Queue) Dequeue() queue.JobInterface {
 	q.mu.RLock()
 	defer q.mu.RLock()
-	model := new(DatabaseJob)
+	model := new(Job)
 	err := q.db.Transaction(func(tx *gorm.DB) error {
 		result := tx.Table(q.table).Where(clause.Eq{
 			Column: clause.Column{Name: ColumnQueue},
@@ -124,7 +122,7 @@ func (q *Queue) Release(job queue.JobInterface, delay time.Duration) {
 				return err
 			}
 		}
-		model := new(DatabaseJob)
+		model := new(Job)
 		model.ID = uuid.New()
 		model.Queue = q.name
 		model.Payload = job

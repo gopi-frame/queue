@@ -8,22 +8,8 @@ import (
 	"github.com/gopi-frame/contract/queue"
 )
 
-const (
-	DefaultJobTable = "jobs"
-)
-
-const (
-	ColumnID          = "id"
-	ColumnQueue       = "queue"
-	ColumnPayload     = "payload"
-	ColumnReservedAt  = "reserved_at"
-	ColumnAvaliableAt = "avaliable_at"
-	ColumnCreatedAt   = "created_at"
-	ColumnUpdatedAt   = "updated_at"
-)
-
-func NewDatabaseJob(queue string, payload queue.JobInterface) *DatabaseJob {
-	queueable := &DatabaseJob{
+func NewJob(queue string, payload queue.JobInterface) *Job {
+	queueable := &Job{
 		ID:          uuid.New(),
 		Queue:       queue,
 		Payload:     payload,
@@ -33,7 +19,7 @@ func NewDatabaseJob(queue string, payload queue.JobInterface) *DatabaseJob {
 	return queueable
 }
 
-type DatabaseJob struct {
+type Job struct {
 	ID          uuid.UUID           `gorm:"column:id;primaryKey" json:"id"`
 	Queue       string              `gorm:"column:queue" json:"queue"`
 	Payload     queue.JobInterface  `gorm:"column:payload;serializer:json" json:"payload"`
@@ -44,18 +30,18 @@ type DatabaseJob struct {
 	UpdatedAt   time.Time           `gorm:"column:updated_at" json:"updated_at"`
 }
 
-func (d *DatabaseJob) GetID() string {
+func (d *Job) GetID() string {
 	return d.ID.String()
 }
 
-func (d *DatabaseJob) GetQueue() string {
+func (d *Job) GetQueue() string {
 	return d.Queue
 }
 
-func (d *DatabaseJob) GetPayload() queue.JobInterface {
+func (d *Job) GetPayload() queue.JobInterface {
 	return d.Payload
 }
 
-func (d *DatabaseJob) GetAttempts() int {
+func (d *Job) GetAttempts() int {
 	return d.Attempts
 }

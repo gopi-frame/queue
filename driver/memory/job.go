@@ -5,8 +5,8 @@ import (
 	"github.com/gopi-frame/contract/queue"
 )
 
-func NewMemoryJob(job queue.JobInterface, queue string) *MemoryJob {
-	model := &MemoryJob{
+func NewJob(job queue.JobInterface, queue string) *Job {
+	model := &Job{
 		ID:      uuid.New(),
 		Payload: job,
 		Queue:   queue,
@@ -15,25 +15,25 @@ func NewMemoryJob(job queue.JobInterface, queue string) *MemoryJob {
 	return model
 }
 
-type MemoryJob struct {
+type Job struct {
 	ID       uuid.UUID
 	Queue    string
 	Payload  queue.JobInterface
 	Attempts int
 }
 
-func (d *MemoryJob) GetID() string {
+func (d *Job) GetID() string {
 	return d.ID.String()
 }
 
-func (d *MemoryJob) GetQueue() string {
+func (d *Job) GetQueue() string {
 	return d.Queue
 }
 
-func (d *MemoryJob) GetPayload() queue.JobInterface {
+func (d *Job) GetPayload() queue.JobInterface {
 	return d.Payload
 }
 
-func (d *MemoryJob) GetAttempts() int {
+func (d *Job) GetAttempts() int {
 	return d.Attempts
 }
