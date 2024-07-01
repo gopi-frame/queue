@@ -2,10 +2,10 @@ package memory
 
 import (
 	"github.com/google/uuid"
-	"github.com/gopi-frame/contract/queue"
+	"github.com/gopi-frame/queue/driver"
 )
 
-func NewJob(job queue.JobInterface, queue string) *Job {
+func NewJob(job driver.Job, queue string) *Job {
 	model := &Job{
 		ID:      uuid.New(),
 		Payload: job,
@@ -18,7 +18,7 @@ func NewJob(job queue.JobInterface, queue string) *Job {
 type Job struct {
 	ID       uuid.UUID
 	Queue    string
-	Payload  queue.JobInterface
+	Payload  driver.Job
 	Attempts int
 }
 
@@ -30,7 +30,7 @@ func (d *Job) GetQueue() string {
 	return d.Queue
 }
 
-func (d *Job) GetPayload() queue.JobInterface {
+func (d *Job) GetPayload() driver.Job {
 	return d.Payload
 }
 

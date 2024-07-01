@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/gopi-frame/contract/queue"
+	"github.com/gopi-frame/queue/driver"
 )
 
-func NewJob(queue string, payload queue.JobInterface) *Job {
+func NewJob(queue string, payload driver.Job) *Job {
 	queueable := &Job{
 		ID:          uuid.New(),
 		Queue:       queue,
@@ -22,7 +22,7 @@ func NewJob(queue string, payload queue.JobInterface) *Job {
 type Job struct {
 	ID          uuid.UUID           `gorm:"column:id;primaryKey" json:"id"`
 	Queue       string              `gorm:"column:queue" json:"queue"`
-	Payload     queue.JobInterface  `gorm:"column:payload;serializer:json" json:"payload"`
+	Payload     driver.Job          `gorm:"column:payload;serializer:json" json:"payload"`
 	Attempts    int                 `gorm:"column:attempts" json:"attempts"`
 	ReservedAt  sql.Null[time.Time] `gorm:"column:reserved_at" json:"reserved_at"`
 	AvaliableAt time.Time           `gorm:"column:avaliable_at" json:"avaliable_at"`
@@ -38,7 +38,7 @@ func (d *Job) GetQueue() string {
 	return d.Queue
 }
 
-func (d *Job) GetPayload() queue.JobInterface {
+func (d *Job) GetPayload() driver.Job {
 	return d.Payload
 }
 

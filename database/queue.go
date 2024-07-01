@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/gopi-frame/contract/queue"
+	"github.com/gopi-frame/queue/driver"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -58,7 +58,7 @@ func (q *Queue) Count() int64 {
 	return count
 }
 
-func (q *Queue) Enqueue(job queue.JobInterface) {
+func (q *Queue) Enqueue(job driver.Job) {
 	model := NewJob(q.name, job)
 	result := q.db.Table(q.table).Create(model)
 	if err := result.Error; err != nil {
@@ -66,7 +66,7 @@ func (q *Queue) Enqueue(job queue.JobInterface) {
 	}
 }
 
-func (q *Queue) Dequeue() queue.JobInterface {
+func (q *Queue) Dequeue() driver.Job {
 	q.mu.RLock()
 	defer q.mu.RLock()
 	model := new(Job)
@@ -98,7 +98,7 @@ func (q *Queue) Dequeue() queue.JobInterface {
 	return model.Payload
 }
 
-func (q *Queue) Remove(job queue.JobInterface) {
+func (q *Queue) Remove(job driver.Job) {
 	if job.GetModel() == nil {
 		return
 	}
@@ -111,11 +111,11 @@ func (q *Queue) Remove(job queue.JobInterface) {
 	}
 }
 
-func (q *Queue) Ack(job queue.JobInterface) {
+func (q *Queue) Ack(job driver.Job) {
 	q.Remove(job)
 }
 
-func (q *Queue) Release(job queue.JobInterface, delay time.Duration) {
+func (q *Queue) Release(job driver.Job, delay time.Duration) {
 	err := q.db.Transaction(func(tx *gorm.DB) error {
 		if model := job.GetModel(); model != nil {
 			if err := tx.Delete(model).Error; err != nil {

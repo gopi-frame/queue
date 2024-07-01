@@ -4,11 +4,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/gopi-frame/contract/queue"
 	"github.com/gopi-frame/future"
+	"github.com/gopi-frame/queue/driver"
 )
 
-func NewWorker(queue queue.Queue) *Worker {
+func NewWorker(queue driver.Queue) *Worker {
 	return &Worker{
 		id: uuid.New(),
 	}
@@ -16,7 +16,7 @@ func NewWorker(queue queue.Queue) *Worker {
 
 type Worker struct {
 	id     uuid.UUID
-	queue  queue.Queue
+	queue  driver.Queue
 	booted bool
 	Quit   chan struct{}
 }

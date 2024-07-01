@@ -5,23 +5,23 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/gopi-frame/contract/queue"
+	"github.com/gopi-frame/collection/queue"
 	"github.com/gopi-frame/future"
-	squeue "github.com/gopi-frame/support/queue"
+	"github.com/gopi-frame/queue/driver"
 )
 
 func NewQueue(name string) *Queue {
 	return &Queue{
 		name: name,
 		size: new(atomic.Int64),
-		jobs: squeue.NewQueue[*Job](),
+		jobs: queue.NewQueue[*Job](),
 	}
 }
 
 type Queue struct {
 	name string
 	size *atomic.Int64
-	jobs *squeue.Queue[*Job]
+	jobs *queue.Queue[*Job]
 }
 
 func (q *Queue) Empty() bool {
@@ -32,7 +32,7 @@ func (q *Queue) Count() int64 {
 	return q.size.Load()
 }
 
-func (q *Queue) Enqueue(job queue.JobInterface) {
+func (q *Queue) Enqueue(job driver.Job) {
 	q.jobs.Lock()
 	defer q.jobs.RUnlock()
 	if q.jobs.Enqueue(NewJob(job, q.name)) {
@@ -40,7 +40,7 @@ func (q *Queue) Enqueue(job queue.JobInterface) {
 	}
 }
 
-func (q *Queue) Dequeue() queue.JobInterface {
+func (q *Queue) Dequeue() driver.Job {
 	q.jobs.RLock()
 	defer q.jobs.RUnlock()
 	job, ok := q.jobs.Dequeue()
@@ -51,7 +51,7 @@ func (q *Queue) Dequeue() queue.JobInterface {
 	return nil
 }
 
-func (q *Queue) Remove(job queue.JobInterface) {
+func (q *Queue) Remove(job driver.Job) {
 	if job.GetModel() == nil {
 		return
 	}
@@ -66,9 +66,9 @@ func (q *Queue) Remove(job queue.JobInterface) {
 	})
 }
 
-func (q *Queue) Ack(job queue.JobInterface) {}
+func (q *Queue) Ack(job driver.Job) {}
 
-func (q *Queue) Release(job queue.JobInterface, delay time.Duration) {
+func (q *Queue) Release(job driver.Job, delay time.Duration) {
 	if model := job.GetModel(); model == nil {
 		return
 	}

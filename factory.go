@@ -1,25 +1,26 @@
 package queue
 
 import (
+	"fmt"
 	"sort"
 
-	"github.com/gopi-frame/contract/queue"
+	"github.com/gopi-frame/collection/kv"
 	"github.com/gopi-frame/exception"
-	"github.com/gopi-frame/support/maps"
+	"github.com/gopi-frame/queue/driver"
 )
 
-var drivers = maps.NewMap[string, queue.Driver]()
+var drivers = kv.NewMap[string, driver.Driver]()
 
-func Register(name string, driver queue.Driver) {
+func Register(driverName string, driver driver.Driver) {
 	drivers.Lock()
 	defer drivers.Unlock()
 	if driver == nil {
 		panic(exception.NewEmptyArgumentException("driver"))
 	}
-	if _, dup := drivers.Get(name); dup {
-		panic(NewDuplicateDriverException(name))
+	if drivers.ContainsKey(driverName) {
+		panic(exception.NewArgumentException("driverName", driverName, fmt.Sprintf("duplicate driver \"%s\"", driverName)))
 	}
-	drivers.Set(name, driver)
+	drivers.Set(driverName, driver)
 }
 
 func Drivers() []string {
@@ -30,12 +31,12 @@ func Drivers() []string {
 	return list
 }
 
-func Open(driverName string, options map[string]any) (queue.Queue, error) {
+func Open(driverName string, options map[string]any) (driver.Queue, error) {
 	drivers.RLock()
 	driver, ok := drivers.Get(driverName)
 	drivers.RUnlock()
 	if !ok {
-		panic(NewUnknownDriverException(driverName))
+		return nil, exception.NewArgumentException("driverName", driverName, fmt.Sprintf("unknown driver \"%s\"", driverName))
 	}
 	return driver.Open(options)
 }

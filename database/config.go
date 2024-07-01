@@ -3,9 +3,9 @@ package database
 import "gorm.io/gorm"
 
 type Config struct {
-	db    *gorm.DB
-	name  string
-	table string
+	db    *gorm.DB `mapstructure:"db"`
+	name  string   `mapstructure:"name"`
+	table string   `mapstructure:"table"`
 }
 
 type Option func(cfg *Config) error
