@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gopi-frame/collection/queue"
+	qc "github.com/gopi-frame/contract/queue"
 	"github.com/gopi-frame/future"
-	"github.com/gopi-frame/queue/driver"
 )
 
 func NewQueue(name string) *Queue {
@@ -24,6 +24,10 @@ type Queue struct {
 	jobs *queue.Queue[*Job]
 }
 
+func (q *Queue) Name() string {
+	return q.name
+}
+
 func (q *Queue) Empty() bool {
 	return q.size.Load() == 0
 }
@@ -32,7 +36,7 @@ func (q *Queue) Count() int64 {
 	return q.size.Load()
 }
 
-func (q *Queue) Enqueue(job driver.Job) {
+func (q *Queue) Enqueue(job qc.Job) {
 	q.jobs.Lock()
 	defer q.jobs.RUnlock()
 	if q.jobs.Enqueue(NewJob(job, q.name)) {
@@ -40,7 +44,7 @@ func (q *Queue) Enqueue(job driver.Job) {
 	}
 }
 
-func (q *Queue) Dequeue() driver.Job {
+func (q *Queue) Dequeue() qc.Job {
 	q.jobs.RLock()
 	defer q.jobs.RUnlock()
 	job, ok := q.jobs.Dequeue()
@@ -51,7 +55,7 @@ func (q *Queue) Dequeue() driver.Job {
 	return nil
 }
 
-func (q *Queue) Remove(job driver.Job) {
+func (q *Queue) Remove(job qc.Job) {
 	if job.GetModel() == nil {
 		return
 	}
@@ -66,9 +70,9 @@ func (q *Queue) Remove(job driver.Job) {
 	})
 }
 
-func (q *Queue) Ack(job driver.Job) {}
+func (q *Queue) Ack(job qc.Job) {}
 
-func (q *Queue) Release(job driver.Job, delay time.Duration) {
+func (q *Queue) Release(job qc.Job, delay time.Duration) {
 	if model := job.GetModel(); model == nil {
 		return
 	}

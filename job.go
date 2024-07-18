@@ -3,19 +3,19 @@ package queue
 import (
 	"time"
 
-	"github.com/gopi-frame/queue/driver"
+	"github.com/gopi-frame/contract/queue"
 )
 
 type Job struct {
-	driver.Job
-	model driver.Queueable
+	queue.Job
+	model queue.Queueable
 }
 
-func (j *Job) SetModel(model driver.Queueable) {
+func (j *Job) SetModel(model queue.Queueable) {
 	j.model = model
 }
 
-func (j *Job) GetModel() driver.Queueable {
+func (j *Job) GetModel() queue.Queueable {
 	return j.model
 }
 

@@ -1,12 +1,14 @@
 package queue
 
 import (
-	"github.com/gopi-frame/queue/driver"
+	"github.com/gopi-frame/contract/eventbus"
+	"github.com/gopi-frame/contract/queue"
+	"github.com/gopi-frame/queue/event"
 )
 
 const DefaultWorkers = 3
 
-func NewDispatcher(queue driver.Queue, nworkers int) *Dispatcher {
+func NewDispatcher(queue queue.Queue, nworkers int) *Dispatcher {
 	if nworkers <= 0 {
 		nworkers = DefaultWorkers
 	}
@@ -18,13 +20,22 @@ func NewDispatcher(queue driver.Queue, nworkers int) *Dispatcher {
 }
 
 type Dispatcher struct {
-	queue    driver.Queue
+	queue    queue.Queue
 	nworkers int
 	workers  []*Worker
 	booted   bool
+
+	bus eventbus.Bus
 }
 
-func (d *Dispatcher) Dispatch(job driver.Job) {
+func (d *Dispatcher) fire(e eventbus.Event) {
+	if d.bus != nil {
+		d.bus.Dispatch(e)
+	}
+}
+
+func (d *Dispatcher) Dispatch(job queue.Job) {
+	d.fire(event.NewDispatching(d.queue.Name()))
 	d.queue.Enqueue(job)
 }
 

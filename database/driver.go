@@ -1,8 +1,8 @@
 package database
 
 import (
+	qc "github.com/gopi-frame/contract/queue"
 	"github.com/gopi-frame/queue"
-	"github.com/gopi-frame/queue/driver"
 )
 
 var driverName = "database"
@@ -15,7 +15,7 @@ func init() {
 
 type Driver struct{}
 
-func (d Driver) Open(options map[string]any) (driver.Queue, error) {
+func (d Driver) Open(options map[string]any) (qc.Queue, error) {
 	cfg, err := ParseCfg(options)
 	if err != nil {
 		return nil, err
