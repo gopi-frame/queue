@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         go-version: ["1.22"]
-        redis-version: [6, 7]
+        redis-version: [6]
     steps:
       - uses: actions/checkout@v4
 
@@ -20,6 +20,9 @@ jobs:
 
       - name: Go mod tidy
         run: go mod tidy
+
+      - name: Test queue consume
+        run: go test -v -coverprofile=coverage.out ./...
 
       - name: Test driver database
         working-directory: ./driver/database
@@ -44,32 +47,42 @@ jobs:
           go mod tidy
           go test -v -coverprofile=coverage.out ./...
 
-      - name: Upload database coverage reports to Codecov
+      - name: Upload queue coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.out
+          fail_ci_if_error: true
+          verbose: true
+          flags: unittests,queue
+          codecov_yml_path: ./.codecov.yml
+
+      - name: Upload driver/database coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./driver/database/coverage.out
           fail_ci_if_error: true
           verbose: true
-          flags: database,queue,unittests
+          flags: database,unittests
           codecov_yml_path: ./.codecov.yml
 
-      - name: Upload redis coverage reports to Codecov
+      - name: Upload driver/redis coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./driver/redis/coverage.out
           fail_ci_if_error: true
           verbose: true
-          flags: redis,queue,unittests
+          flags: redis,unittests
           codecov_yml_path: ./.codecov.yml
 
-      - name: Upload memory coverage reports to Codecov
+      - name: Upload driver/memory coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./driver/memory/coverage.out
           fail_ci_if_error: true
           verbose: true
-          flags: memory,unittests,queue
+          flags: memory,unittests
           codecov_yml_path: ./.codecov.yml

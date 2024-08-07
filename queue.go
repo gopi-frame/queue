@@ -1,3 +1,4 @@
+// Package queue is a queue package for gopi-frame.
 package queue
 
 import (
@@ -39,12 +40,13 @@ func (q *Queue) Run() {
 	q.fire(event.NewQueueBeforeRun(q.Name()))
 	q.startedAt = time.Now()
 	for i := 0; i < q.workernum; i++ {
-		worker := new(Worker)
+		worker := NewWorker(q.workers, q.Queue, q.eventbus)
 		q.workers <- worker
 	}
 	for {
 		select {
 		case <-q.stop:
+			q.workers = make(chan queue.Worker, q.workernum)
 			return
 		default:
 			job, ok := q.Dequeue()
@@ -65,6 +67,9 @@ func (q *Queue) Stop() {
 
 // Uptime returns the uptime of the queue
 func (q *Queue) Uptime() time.Duration {
+	if q.startedAt.IsZero() {
+		return 0
+	}
 	return time.Since(q.startedAt)
 }
 

@@ -2,7 +2,7 @@ codecov:
   require_ci_to_pass: true
   notify:
     wait_for_ci: true
-    after_n_builds: 3
+    after_n_builds: 4
 coverage:
   precision: 2
   round: down
@@ -32,3 +32,7 @@ flags:
     carryforward: true
     paths:
       - "./driver/memory/*"
+  queue:
+    carryforward: true
+    paths:
+      - "./*"
