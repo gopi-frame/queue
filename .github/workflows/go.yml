@@ -6,13 +6,17 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ["1.22"]
+        redis-version: [6, 7]
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: ${{ matrix.go-version }}
 
       - name: Go mod tidy
         run: go mod tidy
@@ -22,6 +26,11 @@ jobs:
         run: |
           go mod tidy
           go test -v -coverprofile=coverage.out ./...
+
+      - name: Start redis
+        uses: supercharge/redis-github-action@1.7.0
+        with:
+          redis-version: ${{ matrix.redis-version }}
 
       - name: Test driver redis
         working-directory: ./driver/redis
