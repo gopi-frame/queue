@@ -36,3 +36,6 @@ flags:
     carryforward: true
     paths:
       - "./*"
+ignore:
+  - "job.go"
+  - "event/*"

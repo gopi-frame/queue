@@ -1,21 +1,26 @@
-# database
+# Overview
+[![Go Reference](https://pkg.go.dev/badge/github.com/gopi-frame/queue/driver/database.svg)](https://pkg.go.dev/github.com/gopi-frame/queue/driver/database)
+[![Go](https://github.com/gopi-frame/queue/actions/workflows/go.yml/badge.svg)](https://github.com/gopi-frame/queue/actions/workflows/go.yml)
+[![codecov](https://codecov.io/gh/gopi-frame/queue/graph/badge.svg?token=N2LZNDNDCT&flag=database)](https://codecov.io/gh/gopi-frame/queue?flags[0]=database)
+[![Go Report Card](https://goreportcard.com/badge/github.com/gopi-frame/queue/driver/database)](https://goreportcard.com/report/github.com/gopi-frame/queue/driver/database)
+[![Mit License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-Package database is a database backed implementation of 
+Package `database` is a database backed implementation of 
 the [queue](https://pkg.go.dev/github.com/gopi-frame/contract/queue) interface
 
-## Installation
+# Installation
 
 ```shell
-go get -u -v github.com/gopi-frame/queue/database
+go get -u -v github.com/gopi-frame/queue/driver/database
 ```
 
-## Import
+# Import
 
 ```go
 import "github.com/gopi-frame/queue/driver/database"
 ```
 
-## Usage
+# Usage
 
 ```go
 package main

@@ -1,4 +1,4 @@
-name: go.yml
+name: Go
 on:
   push:
     branches: [ main ]

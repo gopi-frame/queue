@@ -7,7 +7,7 @@ import (
 )
 
 func TestQueue_Run(t *testing.T) {
-	q := NewQueue(&mockQueue{name: "test"}, 3)
+	q := NewQueue(&mockQueue{name: "test"}, WorkerNum(3))
 	go q.Run()
 	time.Sleep(time.Millisecond * 200)
 	assert.Equal(t, 3, len(q.workers))
@@ -71,7 +71,7 @@ func TestQueue_Run(t *testing.T) {
 }
 
 func TestQueue_Stop(t *testing.T) {
-	q := NewQueue(&mockQueue{name: "test"}, 3)
+	q := NewQueue(&mockQueue{name: "test"}, WorkerNum(3))
 	go q.Run()
 	time.Sleep(time.Millisecond * 200)
 	q.Stop()
@@ -80,7 +80,7 @@ func TestQueue_Stop(t *testing.T) {
 }
 
 func TestQueue_Uptime(t *testing.T) {
-	q := NewQueue(&mockQueue{name: "test"}, 3)
+	q := NewQueue(&mockQueue{name: "test"}, WorkerNum(3))
 	assert.Equal(t, time.Duration(0), q.Uptime())
 	go q.Run()
 	time.Sleep(time.Millisecond * 200)

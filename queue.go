@@ -9,6 +9,9 @@ import (
 	"time"
 )
 
+// DefaultWorkerNum is the default number of workers
+const DefaultWorkerNum = 3
+
 // Queue is a wrapper around [queue.Queue]
 // It consumes jobs from queue and dispatches them to workers
 type Queue struct {
@@ -23,12 +26,39 @@ type Queue struct {
 }
 
 // NewQueue creates a new queue
-func NewQueue(q queue.Queue, workernum int) *Queue {
-	return &Queue{
-		Queue:     q,
-		workernum: workernum,
-		workers:   make(chan queue.Worker, workernum),
-		stop:      make(chan struct{}),
+func NewQueue(buffer queue.Queue, opts ...Option) *Queue {
+	q := &Queue{
+		Queue: buffer,
+		stop:  make(chan struct{}),
+	}
+	for _, opt := range opts {
+		if err := opt(q); err != nil {
+			panic(err)
+		}
+	}
+	return q
+}
+
+type Option func(q *Queue) error
+
+func WorkerNum(workernum int) Option {
+	return func(q *Queue) error {
+		q.workernum = workernum
+		return nil
+	}
+}
+
+func WithEventbus(eb eventbus.Bus) Option {
+	return func(q *Queue) error {
+		q.eventbus = eb
+		return nil
+	}
+}
+
+func WithLogger(l logger.Logger) Option {
+	return func(q *Queue) error {
+		q.logger = l
+		return nil
 	}
 }
 
@@ -39,6 +69,10 @@ func (q *Queue) Run() {
 	}()
 	q.fire(event.NewQueueBeforeRun(q.Name()))
 	q.startedAt = time.Now()
+	if q.workernum <= 0 {
+		q.workernum = DefaultWorkerNum
+	}
+	q.workers = make(chan queue.Worker, q.workernum)
 	for i := 0; i < q.workernum; i++ {
 		worker := NewWorker(q.workers, q.Queue, q.eventbus)
 		q.workers <- worker
