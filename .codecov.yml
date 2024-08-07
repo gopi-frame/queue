@@ -1,0 +1,34 @@
+codecov:
+  require_ci_to_pass: true
+  notify:
+    wait_for_ci: true
+    after_n_builds: 3
+coverage:
+  precision: 2
+  round: down
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 1%
+    patch:
+      default:
+        target: 80%
+        threshold: 1%
+comment:
+  layout: "diff, flags, files"
+  behavior: default
+  require_changes: false
+flags:
+  database:
+    carryforward: true
+    paths:
+      - "./driver/database/*"
+  redis:
+    carryforward: true
+    paths:
+      - "./driver/redis/*"
+  memory:
+    carryforward: true
+    paths:
+      - "./driver/memory/*"

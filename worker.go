@@ -1,56 +1,48 @@
 package queue
 
 import (
-	"time"
-
-	"github.com/google/uuid"
+	"github.com/gopi-frame/contract/eventbus"
 	"github.com/gopi-frame/contract/queue"
-	"github.com/gopi-frame/future"
+	"github.com/gopi-frame/queue/event"
 )
 
-func NewWorker(queue queue.Queue) *Worker {
-	return &Worker{
-		id: uuid.New(),
-	}
-}
-
+// Worker is a worker implementation
 type Worker struct {
-	id     uuid.UUID
-	queue  queue.Queue
-	booted bool
-	Quit   chan struct{}
+	workers  chan queue.Worker
+	queue    queue.Queue
+	eventbus eventbus.Bus
 }
 
-func (w *Worker) Start() {
-	if w.booted {
+// NewWorker creates a new worker
+func NewWorker(workers chan queue.Worker, queue queue.Queue, eventbus eventbus.Bus) *Worker {
+	return &Worker{workers: workers, queue: queue, eventbus: eventbus}
+}
+
+// Handle handles a job
+func (w *Worker) Handle(job queue.Job) {
+	defer func() {
+		w.workers <- w
+	}()
+	model := job.GetQueueable()
+	w.fire(event.NewJobBeforeHandle(model.GetID(), model.GetQueue()))
+	err := job.Handle()
+	if err == nil {
+		w.fire(event.NewJobAfterHandle(model.GetID(), model.GetQueue()))
 		return
 	}
-	future.Void(func() {
-		w.booted = true
-		for {
-			select {
-			case <-w.Quit:
-				return
-			default:
-				job := w.queue.Dequeue()
-				if job == nil {
-					time.Sleep(time.Second * 5)
-					continue
-				}
-				if err := job.Handle(); err != nil {
-					if job.GetModel().GetAttempts() >= job.GetMaxAttempts() {
-						job.Failed(err)
-					} else {
-						w.queue.Release(job, job.GetRetryDelay())
-					}
-					continue
-				}
-				w.queue.Ack(job)
-			}
-		}
-	}).Complete(func() { w.booted = false })
+	if model.GetAttempts() < job.GetMaxAttempts() {
+		w.queue.Release(job)
+		w.fire(event.NewJobAfterRelease(model.GetQueue(), err, model.GetID(), model.GetAttempts()+1))
+		return
+	}
+	job.Failed(err)
 }
 
-func (w *Worker) Stop() {
-	future.Void(func() { w.Quit <- struct{}{} })
+func (w *Worker) fire(e eventbus.Event) {
+	if w.eventbus != nil {
+		err := w.eventbus.Dispatch(e)
+		if err != nil {
+			return
+		}
+	}
 }
