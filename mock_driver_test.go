@@ -15,8 +15,8 @@ type mockDriver struct {
 
 func (mockDriver) Open(options map[string]any) (queuecontract.Queue, error) {
 	name := options["name"].(string)
-	if name == "error" {
-		return nil, errors.New("error")
+	if name == "exception" {
+		return nil, errors.New("exception")
 	}
 	q := &mockQueue{
 		name: name,

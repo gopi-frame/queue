@@ -60,7 +60,7 @@ func TestNewQueue(t *testing.T) {
 		})
 	})
 
-	t.Run("without Name", func(t *testing.T) {
+	t.Run("without name", func(t *testing.T) {
 		assert.Panics(t, func() {
 			NewQueue(&Config{
 				DB:  testDB,

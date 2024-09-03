@@ -13,15 +13,15 @@ import (
 //
 //	type MyJob struct {
 //		queue.Job
-//		// Add any additional fields here
+//		// AddBuilder any additional fields here
 //	}
 //
-//	func (j *MyJob) Handle() error {
+//	func (j *MyJob) Handle() exception {
 //		// Do something
 //		return nil
 //	}
 //
-//	func (j *MyJob) Failed(err error) {
+//	func (j *MyJob) Failed(err exception) {
 //		// Handle job failure
 //	}
 //
@@ -29,15 +29,15 @@ import (
 //
 //	type MyJob struct {
 //		queue.Job
-//		// Add any additional fields here
+//		// AddBuilder any additional fields here
 //	}
 //
-//	func (j *MyJob) Handle() error {
+//	func (j *MyJob) Handle() exception {
 //		// Do something
 //		return nil
 //	}
 //
-//	func (j *MyJob) Failed(err error) {
+//	func (j *MyJob) Failed(err exception) {
 //		// Handle job failure
 //	}
 //

@@ -71,7 +71,7 @@ func WithDB(db rediscontract.Client) Option {
 	}
 }
 
-// WithJob sets the job type. If job is nil, then an error is returned.
+// WithJob sets the job type. If job is nil, then an exception is returned.
 func WithJob(job queuecontract.Job) Option {
 	return func(cfg *Config) error {
 		if job == nil {

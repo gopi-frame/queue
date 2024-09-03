@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// DefaultJobTable is the default Table Name for jobs.
+// DefaultJobTable is the default Table name for jobs.
 const DefaultJobTable = "jobs"
 
 // Config is the configuration for database queue.
@@ -18,7 +18,7 @@ type Config struct {
 	Job   queue.Job
 }
 
-// Valid validates the config. It returns an error if the config is invalid.
+// Valid validates the config. It returns an exception if the config is invalid.
 func (c *Config) Valid() error {
 	var errs []error
 	if c.DB == nil {
@@ -59,7 +59,7 @@ func (c *Config) Apply(opts ...Option) error {
 	return nil
 }
 
-// WithTable sets the Table Name.
+// WithTable sets the Table name.
 func WithTable(table string) Option {
 	return func(cfg *Config) error {
 		if table == "" {

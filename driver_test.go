@@ -43,9 +43,9 @@ func TestOpen(t *testing.T) {
 		}
 	})
 
-	t.Run("has error", func(t *testing.T) {
+	t.Run("has exception", func(t *testing.T) {
 		q, err := Open("test", map[string]any{
-			"name": "error",
+			"name": "exception",
 		})
 		assert.Error(t, err)
 		assert.Nil(t, q)

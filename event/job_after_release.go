@@ -6,7 +6,7 @@ type JobAfterRelease struct {
 	Name string
 	// ID is job ID
 	ID string
-	// Cause is the error that caused the job to be released
+	// Cause is the exception that caused the job to be released
 	Cause error
 	// Attempts is how many times the job has been attempted
 	Attempts int
