@@ -62,7 +62,7 @@ func main() {
     for {
         if job, ok := q.Dequeue(); ok {
             if err := job.Handle(); err != nil {
-                if job.GetQueueable().GetAttempts < job.GetMaxAttempts() {
+                if job.GetQueueable().GetAttempts() < job.GetMaxAttempts() {
                     q.Release(job)
                 } else {
                     job.Failed(err)
