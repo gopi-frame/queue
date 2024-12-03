@@ -1,8 +1,9 @@
 package queue
 
 import (
-	"github.com/gopi-frame/contract/queue"
 	"time"
+
+	"github.com/gopi-frame/contract/queue"
 )
 
 // Job is an abstract queue job.
@@ -16,12 +17,12 @@ import (
 //		// AddBuilder any additional fields here
 //	}
 //
-//	func (j *MyJob) Handle() exception {
+//	func (j *MyJob) Handle() error {
 //		// Do something
 //		return nil
 //	}
 //
-//	func (j *MyJob) Failed(err exception) {
+//	func (j *MyJob) Failed(err error) {
 //		// Handle job failure
 //	}
 //
